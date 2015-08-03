@@ -120,6 +120,57 @@ summarize.fs <- function(prefix, plot=T, main=NULL) {
     list(max.complexity=compl[maxml,1], max.components=compo.freq, complexity=compl, components=compo)
 }
 
+summarize.fs2 <- function(outdir, fams, K=1:25, plot=T) {
+    data <- lapply(fams, function(fam) {
+        sum_file <- file.path(outdir, fam, 'k_summary.csv')
+        summary <- read.table(sum_file, sep=",", header=T, stringsAsFactors=F)
+        summary <- summary[summary$K %in% K,]
+        summary <- summary[order(summary$K),]
+        summary <- data.frame(fam=fam, summary)
+        
+        summary$size1 <- 0
+        summary$size2 <- 0
+    
+        maxML <- summary[min(which(summary$ML == max(summary$ML))),"K"]
+        summary$size1[summary$K == maxML] <- 2.5
+    
+        tab <- table(summary$bestK)
+        bestK <- as.integer(names(tab)[min(which(tab==max(tab)))])
+        summary$size2[summary$bestK==bestK] <- 2.5
+        
+        list(summary=summary, maxML=maxML, bestK=bestK)   
+    })
+    
+    summary <- do.call(rbind, lapply(data, "[[", 'summary'))
+    summary$fam <- factor(summary$fam, levels=fams)
+    params <- do.call(rbind, lapply(data, function(x) data.frame(maxML=x$maxML, bestK=x$bestK)))
+    rownames(params) <- fams
+    
+    if (plot)
+        my.grid.arrange(list(
+            ggplot(summary, aes(x=K, y=ML, colour=fam)) + geom_line(size=1) + 
+                geom_point(aes(size=size1), shape=21, fill='black') + 
+                scale_size_identity() + 
+                theme_bw(),
+            ggplot(summary, aes(x=K, y=bestK, colour=fam)) + geom_line(size=1) + 
+                geom_point(aes(size=size2), shape=21, fill='black') + 
+                scale_size_identity() + 
+                theme_bw()
+            ), ncol=1
+        )
+    
+    list(summary=summary, params=params)
+}
+
+my.grid.arrange <- function(plots, ...) {
+    grobs <- lapply(plots, ggplotGrob)
+    max.width <- as.list(do.call(grid::unit.pmax, lapply(grobs, function(x) x$widths[2:5])))
+    for (i in 1:length(grobs)) {
+        grobs[[i]]$widths[2:5] <- max.width
+    }
+    do.call(grid.arrange, c(grobs, list(...)))
+}
+
 summarize.structure <- function(plink.prefix, result.dir, name, k, chromosomes=c(1:19,"X"), sbs=F, locus.af=F) {
     if (length(k) > 1) {
         Ks <- lapply(k, function(kk) summarize.structure(plink.prefix, result.dir, name, kk, chromosomes, sbs, locus.af))

@@ -285,20 +285,30 @@ g.n.as.h.matrix <- function(a, g, H="H", V="V", N.in="N", N.out="N") {
     m
 }
 
-# Convert a MxN matrix of numeric genotypes to a Mx2N matrix of alleles (every pair of
-# columns is a set of haploid (unphased) genotypes). VINOs are converted to N's.
-g.i.as.h.matrix <- function(a, g, N.out="N") {
+#' Convert a MxN matrix of numeric genotypes to a Mx2N matrix of alleles (every pair of
+#' columns is a set of haploid (unphased) genotypes). VINOs are converted to N's.
+
+g.i.as.h.matrix <- function(a, g, H.in="H", N.in="N", N.out="N") {
     if (!is.matrix(a)) a <- as.matrix(a)
     if (!is.matrix(g)) g <- as.matrix(g)
+    
+    alleles <- FALSE
+    if (is.character(g)) {
+        alleles <- TRUE
+    }
     
     m1 <- matrix(N.out, nrow(g), ncol(g))
     m2 <- matrix(N.out, nrow(g), ncol(g))
     
     for (i in 1:nrow(g)) {
-        m1[i, g[i,]<=2] <- a[i,1]
-        m1[i, g[i,]==3] <- a[i,2]
-        m2[i, g[i,]==1] <- a[i,1]
-        m2[i, g[i,]==2 | g[i,]==3] <- a[i, 2]
+        gg <- g[i,]
+        if (alleles) {
+            gg <- as.integer(factor(gg, levels=c("A",H.in,"B",N.in)))
+        }
+        m1[i, gg<=2] <- a[i,1]
+        m1[i, gg==3] <- a[i,2]
+        m2[i, gg==1] <- a[i,1]
+        m2[i, gg==2 | gg==3] <- a[i, 2]
     }
 
     m <- matrix(N.out, nrow(g), ncol(g) * 2)
