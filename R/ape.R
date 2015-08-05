@@ -1,7 +1,3 @@
-library(ape)
-library(multicore)
-loadlib("geno/convert.R")
-
 # This function is equivalent to running SEQBOOT + DNADIST. It creates B different samplings of
 # a data set and calls dist.dna on each. seq must be a matrix with rows = samples and cols = SNPs,
 # and cells must be A/C/G/T or an ambiguous character, and must be lower case. The output is a list

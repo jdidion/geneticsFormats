@@ -1,3 +1,5 @@
+#' Convert a bim file to the genetic map format used by ShapeIt.
+#' Recombiantion rate is estimated as (cM1 - cM0) / ((pos1 - pos0) / 1000000)
 bim.to.map <- function(bim, outfile, chrms=NULL) {
     if (is.character(bim)) {
         bim <- read.table(bim, sep="\t", header=F, stringsAsFactors=F)
@@ -5,7 +7,7 @@ bim.to.map <- function(bim, outfile, chrms=NULL) {
     if (is.null(chrms)) {
         chrms <- unique(bim[,1])
     }
-    scipen <- options(scipen)
+    scipen <- getOption('scipen')
     options(scipen=10)
     for (chrm in chrms) {
         b <- bim[bim[,1]==chrm,]
