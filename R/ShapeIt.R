@@ -26,3 +26,18 @@ bim.to.map <- function(bim, outfile, chrms=NULL) {
     }
     options(scipen=scipen)
 }
+
+merge.shapeit <- function(sample.files, hap.files, sample.out, hap.out) {
+    stopifnot(length(sample.files)==length(hap.files))
+    sample.header <- read.table(sample.files[1], nrow=2, header=F, stringsAsFactors = F)
+    samples <- do.call(rbind, lapply(sample.files, read.table, skip=2, header=F, stringsAsFactors=F))
+    haps <- read.table(hap.files[1], header=F, stringsAsFactors=F)
+    for (i in 2:length(hap.files)) {
+        h <- read.table(hap.files[i], header=F, stringsAsFactors=F)
+        stopifnot(all(haps[,2] == h[,2]))
+        haps <- cbind(haps, h[,-c(1:5)])
+    }
+    write.table(sample.header, sample.out, row.names=F, col.names=F, quote=F)
+    write.table(samples, sample.out, row.names=F, col.names=F, quote=F, append = T)
+    write.table(haps, hap.out, col.names=F, row.names=F, quote=F)
+}

@@ -2,7 +2,7 @@
 # to the input and output formats. So for example, g.n.as.i converts genotypes in nucleotide 
 # format to genotypes in integer format. The formats are:
 # 1. Genotype (g): A vector of genotypes. Genotypes may be encoded as nucleotides (n),
-# alleles (a) or integers (i). Numeric genotypes are coded A=1, H=2, B=3, V=4, N=5.
+# alleles (a), integers (i), or dosages (d). Numeric genotypes are coded A=1, H=2, B=3, V=4, N=5.
 # 2. Haplotype (h): A pair of vectors (typically a list, but may also be rows or columns in a
 # matrix). Again, characters may be nucleotides or integers, but H and V are not allowed.
 # Additionally, these formats may be converted to VINO (v) format, which is binary (non-VINO calls
@@ -355,6 +355,22 @@ g.i.as.n <- function(a, g, H="H", V="V", N="N") {
         m[i,g[i,]==2] <- H[i]
         m[i,g[i,]==3] <- a[i,2]
         m[i,g[i,]==4] <- V
+    }
+    m
+}
+
+g.d.as.n <- function(a, g, N.in=NA, H.out="H", N.out="N") {
+    if (!is.matrix(a)) a <- as.matrix(a)
+    if (!is.matrix(g)) g <- as.matrix(g)
+    m <- matrix(N.out, nrow(g), ncol(g), dimnames=dimnames(g))
+    N <- is.na(g)
+    if (!is.na(N.in)) {
+        N <- N | g == N.in
+    }
+    for (i in 1:nrow(g)) {
+        m[i,!N[i,] & g[i,]==2] <- a[i,1]
+        m[i,!N[i,] & g[i,]==1] <- H.out
+        m[i,!N[i,] & g[i,]==0] <- a[i,2]
     }
     m
 }
